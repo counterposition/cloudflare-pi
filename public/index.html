@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Pi — private session</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <h1 class="brand">pi</h1>
+      <div class="chips">
+        <span id="session-chip" class="chip" title="Session identifier">session —</span>
+        <span id="conn-chip" class="chip conn-connecting" role="status" aria-live="polite"
+          >connecting…</span
+        >
+        <span id="busy-chip" class="chip" role="status" aria-live="polite">idle</span>
+        <span id="model-chip" class="chip" title="Model of the most recent assistant response"
+          >model —</span
+        >
+        <span id="workspace-chip" class="chip" title="Workspace state and latest checkpoint"
+          >workspace —</span
+        >
+      </div>
+      <div class="topbar-actions">
+        <button id="checkpoint-btn" type="button" disabled>Checkpoint</button>
+        <button
+          id="restore-btn"
+          type="button"
+          title="Replace all project files with the latest checkpoint"
+          disabled
+        >
+          Restore
+        </button>
+      </div>
+    </header>
+
+    <p id="workspace-error" class="banner banner-error" role="alert" hidden></p>
+    <section id="notices" class="notices" aria-label="Session notices" hidden></section>
+
+    <main id="transcript" aria-label="Conversation transcript"></main>
+
+    <section id="inbox" class="inbox" aria-label="Queued messages" hidden>
+      <h2 class="inbox-title">Queued</h2>
+      <ul id="inbox-list" class="inbox-list"></ul>
+    </section>
+
+    <div id="pending" class="pending" hidden>
+      <span id="pending-text" class="pending-text"></span>
+      <button id="pending-retry" type="button">Retry send</button>
+      <button id="pending-discard" type="button">Discard</button>
+    </div>
+
+    <p id="flash" class="flash" role="status" aria-live="polite" hidden></p>
+    <p id="error" class="banner banner-error" role="alert" hidden></p>
+
+    <form id="composer" class="composer">
+      <label class="visually-hidden" for="input">Message</label>
+      <textarea
+        id="input"
+        rows="3"
+        placeholder="Message pi — Enter sends, Shift+Enter adds a newline"
+        autocomplete="off"
+        spellcheck="true"
+      ></textarea>
+      <div class="composer-row">
+        <label class="when-label" for="when-busy" title="Applies while pi is already working"
+          >If busy</label
+        >
+        <select id="when-busy">
+          <option value="steer">steer</option>
+          <option value="followUp">follow up</option>
+        </select>
+        <span id="usage-line" class="usage-line"></span>
+        <span class="composer-spacer"></span>
+        <button id="abort-btn" type="button" class="danger" hidden>Abort</button>
+        <button id="send-btn" type="submit">Send</button>
+      </div>
+    </form>
+  </body>
+</html>

@@ -1,0 +1,23 @@
+// Test-only Wrangler config for test/durable-sqlite.test.ts. The Vitest Workers project points
+// at this file instead of the application wrangler.jsonc, so the SQL adapter suite runs without
+// the application worker, AI, R2, or container bindings.
+{
+  "name": "cloudflare-pi-sql-tests",
+  "main": "./durable-sqlite.fixture.ts",
+  "compatibility_date": "2026-10-03",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SESSIONS",
+        "class_name": "TestSession",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["TestSession"],
+    },
+  ],
+}

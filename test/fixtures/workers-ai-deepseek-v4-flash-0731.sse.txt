@@ -1,0 +1,12 @@
+data: {"choices":[{"delta":{"content":"","reasoning_content":null,"role":"assistant"},"finish_reason":null,"index":0,"logprobs":null,"matched_stop":null}],"created":1791064957,"id":"3e68bd4eca1c4584b2cb40277994bfd0","model":"@cf/deepseek-ai/deepseek-v4-flash-0731","object":"chat.completion.chunk","p":"dby6d3nf680sz1kvmgg4j2r","usage":{"prompt_tokens":290,"completion_tokens":0,"total_tokens":290,"prompt_tokens_details":{"cached_tokens":0},"neurons":11.59999942779541}}
+
+data: {"choices":[{"delta":{"content":null,"reasoning_content":null,"role":null,"tool_calls":[{"function":{"arguments":"{\"value\": \"durable-cloudflare-check\"}","name":"record_result"},"id":"call_46f9c82b69d943829dfdd002","index":0,"type":"function"}]},"finish_reason":null,"index":0,"logprobs":null,"matched_stop":null}],"created":1791064958,"id":"3e68bd4eca1c4584b2cb40277994bfd0","model":"@cf/deepseek-ai/deepseek-v4-flash-0731","object":"chat.completion.chunk","p":"dgtdv7tfak3x1jsjmj9zrxajme9dhlt6j3n5ju5b0x8","usage":{"prompt_tokens":0,"completion_tokens":42,"total_tokens":42,"prompt_tokens_details":{"cached_tokens":0},"neurons":5.039999961853027}}
+
+data: {"choices":[{"delta":{"reasoning_content":null},"finish_reason":"tool_calls","index":0,"logprobs":null,"matched_stop":1}],"created":1791064958,"id":"3e68bd4eca1c4584b2cb40277994bfd0","model":"@cf/deepseek-ai/deepseek-v4-flash-0731","object":"chat.completion.chunk","p":"z5ajy5kmh5pohbms9z8o75u33imz8ua404j4t5n1z7ukpl","usage":{"prompt_tokens":0,"completion_tokens":0,"total_tokens":0,"prompt_tokens_details":{"cached_tokens":0},"neurons":0}}
+
+data: {"choices":[],"created":1791064958,"id":"3e68bd4eca1c4584b2cb40277994bfd0","model":"@cf/deepseek-ai/deepseek-v4-flash-0731","object":"chat.completion.chunk","p":"th6yilv1exl0ifor7edsei4brfx87i0artzield9um7dnmtd7l","usage":{"prompt_tokens":0,"completion_tokens":7,"total_tokens":7,"prompt_tokens_details":{"cached_tokens":0},"neurons":0.8399999737739563}}
+
+data: {"response":"","usage":{"prompt_tokens":290,"completion_tokens":49,"total_tokens":339,"prompt_tokens_details":{"cached_tokens":0},"neurons":17.479999363422394}}
+
+data: [DONE]
+

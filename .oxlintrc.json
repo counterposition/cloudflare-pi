@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "env": {
+    "builtin": true
+  },
+  "overrides": [
+    {
+      "files": ["public/app.js"],
+      "env": {
+        "builtin": true,
+        "browser": true
+      }
+    }
+  ]
+}

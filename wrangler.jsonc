@@ -1,0 +1,53 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cloudflare-pi",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-03",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "<your-team>.cloudflareaccess.com",
+    "ACCESS_AUD": "<your-access-aud>",
+  },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+  },
+  "ai": {
+    "binding": "AI",
+  },
+  "containers": [
+    {
+      "class_name": "Session",
+      "scheduling_policy": "durable_object",
+      "images": {
+        "workspace": {
+          "dockerfile": "./Dockerfile",
+        },
+      },
+    },
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SESSIONS",
+        "class_name": "Session",
+      },
+    ],
+  },
+  "exports": {
+    "Session": {
+      "type": "durable-object",
+      "storage": "sqlite",
+    },
+    "DirectoryBackupGateway": {
+      "type": "worker",
+    },
+  },
+  "r2_buckets": [
+    {
+      "binding": "WORKSPACE_BACKUPS",
+      "bucket_name": "workspace-backups",
+    },
+  ],
+}

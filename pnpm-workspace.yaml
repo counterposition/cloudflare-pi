@@ -1,0 +1,23 @@
+minimumReleaseAgeExclude:
+  - "@cloudflare/workers-types@5.20261003.1"
+  - "@earendil-works/chord@1.0.1"
+  - "@earendil-works/pi-ai@1.0.1"
+  - "@earendil-works/pi-durable@1.0.1"
+  - "@earendil-works/pi-telemetry@1.0.1"
+  - "workerd@1.20261001.1"
+# The current workerd binary (1.20261001.1, supports compat dates through
+# 2026-10-08). @cloudflare/vitest-pool-workers@0.22.0 pins an older miniflare
+# whose workerd 1.20260815.1 only supports compat dates through 2026-08-22 and
+# cannot boot the 2026-10-03 SQL test fixture; pin the binary everywhere so the
+# pool runs the same current runtime as wrangler 4.147.
+overrides:
+  workerd: 1.20261001.1
+# Selective dependency build-script approvals (pnpm >= 10.26 allowBuilds map).
+# esbuild/workerd: native binaries need their postinstall to run.
+# @google/genai (transitive of pi-ai, inference is Workers AI only) and
+# protobufjs (docs-only postinstall, no runtime effect here): denied.
+allowBuilds:
+  esbuild: true
+  workerd: true
+  "@google/genai": false
+  protobufjs: false
