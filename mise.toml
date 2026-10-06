@@ -1,0 +1,45 @@
+[tools]
+# Matches package.json engines (>=24) and the Dockerfile base image (node:24).
+node = "24"
+# Matches package.json packageManager.
+pnpm = "12.9.1"
+
+[tasks.install]
+description = "Install locked dependencies"
+run = "pnpm install --frozen-lockfile"
+
+[tasks.dev]
+description = "Run the Worker locally (wrangler dev)"
+run = "pnpm dev"
+
+[tasks.lint]
+description = "Lint with oxlint"
+run = "pnpm lint"
+
+[tasks.format]
+description = "Format with oxfmt"
+run = "pnpm format"
+
+[tasks."format:check"]
+description = "Check formatting with oxfmt"
+run = "pnpm format:check"
+
+[tasks.typecheck]
+description = "Typecheck with tsc"
+run = "pnpm typecheck"
+
+[tasks.test]
+description = "Run vitest"
+run = "pnpm test"
+
+[tasks.build]
+description = "Dry-run deploy build"
+run = "pnpm build"
+
+[tasks.check]
+description = "Run all local gates"
+run = ["pnpm format:check", "pnpm typecheck", "pnpm lint", "pnpm test", "pnpm build"]
+
+[tasks.deploy]
+description = "Deploy the Worker and container image"
+run = "pnpm deploy"
