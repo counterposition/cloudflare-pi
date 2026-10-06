@@ -19,7 +19,7 @@ pnpm install --frozen-lockfile
 
 ## The original deployment's account
 
-That account already has every Cloudflare resource provisioned: R2 enabled with its zero-base-price usage subscription, the `workspace-backups` bucket, and an Access application with an owner-only email allow policy whose AUD is the one in `wrangler.jsonc`. If you're working against it, don't recreate them. Don't bypass Access for testing; anonymous requests are expected to be redirected (302) to Access.
+That account already has every Cloudflare resource provisioned: R2 enabled with its zero-base-price usage subscription, the `workspace-backups` bucket, and an Access application with an owner-only email allow policy whose team domain and AUD live in the gitignored `.dev.vars`. Those two values were plain `vars` in `wrangler.jsonc` until 2026-10-05; the live Worker still has them as vars, and the next plain deploy deletes them. Make that next deploy `pnpm exec wrangler deploy --secrets-file .dev.vars` so it uploads them as secrets in the same version; after that, `pnpm deploy` is enough. If you're working against it, don't recreate them. Don't bypass Access for testing; anonymous requests are expected to be redirected (302) to Access.
 
 ## Gates
 

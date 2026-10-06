@@ -70,7 +70,7 @@ Wrangler is authenticated to the owner's account (`<account-id>`). `pnpm exec wr
 - Native AI binding `AI`.
 - Authenticated static assets binding `ASSETS`, `run_worker_first: true`.
 - `DirectoryBackupGateway` WorkerEntrypoint export, RPC-only, not publicly routed.
-- Access team domain (`<your-team>.cloudflareaccess.com`) and application audience, already configured. These are non-secret values; no account/provider credentials were written to the repo.
+- Access team domain (`<your-team>.cloudflareaccess.com`) and application audience, already configured. (Since moved out of `wrangler.jsonc` into Worker secrets; see [DEVELOPMENT.md](DEVELOPMENT.md).) These are non-secret values; no account/provider credentials were written to the repo.
 
 Access application ID: `<access-app-id>`. It protects the live hostname with an owner-only email allow policy. Anonymous `curl` returned **302 to Cloudflare Access**, not application data.
 

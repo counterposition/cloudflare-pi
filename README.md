@@ -74,7 +74,15 @@ Each person who signs in gets exactly one session and one workspace. There's no 
 
    Don't add a bypass rule: the app rejects any request without a valid Access token.
 
-6. **Point the app at your Access application.** In `wrangler.jsonc`, replace `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` under `vars` with your values. (The committed values belong to the original deployment. Neither is a secret.) Then deploy again with `pnpm deploy`.
+6. **Point the app at your Access application.** Put your values in `.dev.vars` (it's gitignored), then upload them as Worker secrets. Secrets survive later deploys, so this is a one-time step.
+
+   ```sh
+   cat > .dev.vars <<'VARS'
+   ACCESS_TEAM_DOMAIN=<your-team>.cloudflareaccess.com
+   ACCESS_AUD=<your-aud-tag>
+   VARS
+   pnpm exec wrangler secret bulk .dev.vars
+   ```
 
 7. Open `https://cloudflare-pi.<your-subdomain>.workers.dev` and sign in.
 

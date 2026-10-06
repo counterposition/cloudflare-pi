@@ -4,10 +4,7 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-10-03",
   "compatibility_flags": ["nodejs_compat"],
-  "vars": {
-    "ACCESS_TEAM_DOMAIN": "<your-team>.cloudflareaccess.com",
-    "ACCESS_AUD": "<your-access-aud>",
-  },
+  // ACCESS_TEAM_DOMAIN and ACCESS_AUD are Worker secrets, not vars: `wrangler secret bulk .dev.vars`.
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
