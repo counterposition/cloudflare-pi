@@ -137,17 +137,28 @@ const WORKERS_AI_COMPAT: OpenAICompletionsCompat = {
   supportsOpenAIGrammarTools: false,
   supportsMidConvoSystemMessages: false,
   supportsMidConvoToolAdditions: false,
-  sendSessionAffinityHeaders: false,
+  // Prefix caching: Pi Durable passes each conversation's persisted provider session id, and
+  // `openai-nosession` turns it into `x-session-affinity` (plus `x-client-request-id`, which the
+  // bridge drops). Workers AI routes requests with the same affinity id to the same model
+  // instance, where the conversation's cached prefix lives.
+  sendSessionAffinityHeaders: true,
+  sessionAffinityFormat: "openai-nosession",
   supportsLongCacheRetention: false,
 };
+
+/** The only request header the bridge forwards to the binding (as `extraHeaders`). */
+const SESSION_AFFINITY_HEADER = "x-session-affinity";
 
 /**
  * Bridge `fetch` → `env.AI.run`. Receives the OpenAI client's request
  * (method/body/signal), extracts the chat-completions JSON body — which for
  * OpenAI-schema models is exactly the run-input shape — and returns the raw
- * upstream Response. Headers are dropped by design: binding calls carry no
- * credentials. The model id comes from the request body (Pi always sets it to
- * the registered model id); `fallbackModelId` covers a body without one.
+ * upstream Response. Headers are dropped by design (binding calls carry no
+ * credentials), except `x-session-affinity`, which is forwarded through the
+ * binding's documented `extraHeaders` option so Workers AI prefix caching can
+ * route the conversation to the instance holding its cached prompt. The model
+ * id comes from the request body (Pi always sets it to the registered model
+ * id); `fallbackModelId` covers a body without one.
  *
  * `ai.run` is invoked as a real method so `this` stays bound to the binding.
  * The generated `Ai` type narrows inputs to per-model schema unions and keys
@@ -165,10 +176,12 @@ function createBindingRunFetch(ai: Ai, fallbackModelId: string): FetchFunction {
   return async (input, init) => {
     let body: unknown;
     let signal: AbortSignal | undefined = init?.signal ?? undefined;
+    let affinity = new Headers(init?.headers).get(SESSION_AFFINITY_HEADER);
     if (typeof input === "object" && input !== null && !(input instanceof URL)) {
       const request = input as Request;
       body = await request.json();
       signal ??= request.signal ?? undefined;
+      affinity ??= request.headers.get(SESSION_AFFINITY_HEADER);
     } else {
       const rawBody = init?.body;
       if (typeof rawBody !== "string") {
@@ -184,6 +197,9 @@ function createBindingRunFetch(ai: Ai, fallbackModelId: string): FetchFunction {
       typeof params.model === "string" && params.model.length > 0 ? params.model : fallbackModelId;
     const options: AiOptions & { returnRawResponse: true } = { returnRawResponse: true };
     if (signal !== undefined) options.signal = signal;
+    if (affinity !== null && affinity.length > 0) {
+      options.extraHeaders = { [SESSION_AFFINITY_HEADER]: affinity };
+    }
     return ai.run(modelId, params, options) as unknown as Promise<Response>;
   };
 }

@@ -8,6 +8,16 @@ import {
   type Context,
   type Tool,
 } from "@earendil-works/pi-ai";
+import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
+import {
+  Harness,
+  MemoryStorage,
+  ProviderDoc,
+  ROOT_CONVERSATION_ID,
+  createRegistry,
+  defineExtension,
+  defineTool,
+} from "@earendil-works/pi-durable";
 import { describe, expect, it } from "vitest";
 import { createWorkersAiModels } from "../src/models";
 
@@ -25,10 +35,16 @@ const RECORDED_SSE = readFileSync(
   "utf8",
 );
 
+interface RunOptions {
+  returnRawResponse?: boolean;
+  signal?: AbortSignal;
+  extraHeaders?: object;
+}
+
 interface RunCall {
   model: string;
   inputs: Record<string, unknown>;
-  options: { returnRawResponse?: boolean; signal?: AbortSignal } | undefined;
+  options: RunOptions | undefined;
 }
 
 function fakeBinding(response: Response | ((call: RunCall) => Response)): {
@@ -40,7 +56,7 @@ function fakeBinding(response: Response | ((call: RunCall) => Response)): {
     run: (
       model: string,
       inputs: Record<string, unknown>,
-      options?: { returnRawResponse?: boolean; signal?: AbortSignal },
+      options?: RunOptions,
     ): Promise<Response> => {
       const call: RunCall = { model, inputs, options };
       calls.push(call);
@@ -197,6 +213,99 @@ describe("createWorkersAiModels", () => {
     // the upstream run actually observed the abort.
     expect(calls[0]?.options?.signal?.aborted).toBe(true);
     expect(upstreamAborted).toBe(true);
+  });
+
+  it("forwards only the session affinity header to the binding, and nothing without a session id", async () => {
+    const { binding, calls } = fakeBinding(
+      () =>
+        new Response(RECORDED_SSE, {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        }),
+    );
+    const { models, model } = createWorkersAiModels(binding);
+    const resolved = models.getModel(model.provider, model.modelId)!;
+    const context: Context = {
+      messages: [{ role: "user", content: "Record the check result", timestamp: 0 }],
+      tools: [recordResultTool()],
+    };
+
+    await withoutGlobalFetch(async () => {
+      await collect(models.stream(resolved, context, { sessionId: "ses-affinity-1" }));
+      await collect(models.stream(resolved, context));
+    });
+
+    // pi-ai also sets `x-client-request-id`; the bridge forwards the affinity id alone.
+    expect(calls[0]?.options?.extraHeaders).toEqual({ "x-session-affinity": "ses-affinity-1" });
+    expect(calls[1]?.options?.extraHeaders).toBeUndefined();
+  });
+
+  it("routes every model call of a Pi conversation with its persisted provider session id", async () => {
+    // First call: the recorded tool-call wire. Second call (after the tool result): an upstream
+    // failure, which ends the run without retries. Both are real generation requests.
+    const { binding, calls } = fakeBinding(() =>
+      calls.length === 1
+        ? new Response(RECORDED_SSE, {
+            status: 200,
+            headers: { "content-type": "text/event-stream" },
+          })
+        : new Response(JSON.stringify({ errors: [{ code: 3040, message: "Capacity" }] }), {
+            status: 500,
+            headers: { "content-type": "application/json" },
+          }),
+    );
+    const { models, model } = createWorkersAiModels(binding);
+    const registry = createRegistry();
+    registry.install(
+      defineExtension({
+        name: "test",
+        tools: [
+          defineTool({
+            ...recordResultTool(),
+            replay: "safe",
+            execute: async ({ value }) => ({
+              content: [{ type: "text", text: `recorded ${value}` }],
+            }),
+          }),
+        ],
+      }),
+    );
+    const harness = await Harness.open(
+      new MemoryStorage(),
+      { models, registry, settings: { retry: { enabled: false } } },
+      BACKGROUND_CONTEXT,
+    );
+    try {
+      harness.resume();
+      const root = await harness.root(BACKGROUND_CONTEXT, {
+        agent: { model, thinkingLevel: "off" },
+      });
+      await withoutGlobalFetch(async () => {
+        const submission = await root.submit(
+          {
+            type: "input",
+            content: "Record the check result",
+            requestId: "r-1",
+            whenBusy: "followUp",
+          },
+          BACKGROUND_CONTEXT,
+        );
+        expect((await submission.wait(BACKGROUND_CONTEXT)).status).toBe("unanswered");
+      });
+
+      const provider = await harness.snapshot(
+        ProviderDoc,
+        ROOT_CONVERSATION_ID,
+        BACKGROUND_CONTEXT,
+      );
+      expect(provider?.sessionId).toMatch(/^[0-9a-f-]{36}$/);
+      expect(calls).toHaveLength(2);
+      for (const call of calls) {
+        expect(call.options?.extraHeaders).toEqual({ "x-session-affinity": provider?.sessionId });
+      }
+    } finally {
+      await harness.close(BACKGROUND_CONTEXT);
+    }
   });
 
   it("reports upstream failures as stream errors instead of fabricated success", async () => {
