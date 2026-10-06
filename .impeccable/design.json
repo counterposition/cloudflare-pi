@@ -1,0 +1,533 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-05T01:19:25.872Z",
+  "title": "Design System: pi",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Ground",
+        "canonical": "oklch(19.6% 0.003 68)",
+        "tonalRamp": [
+          "oklch(15% 0.003 68)",
+          "oklch(25% 0.003 68)",
+          "oklch(35% 0.003 68)",
+          "oklch(45% 0.003 68)",
+          "oklch(58% 0.003 68)",
+          "oklch(70% 0.003 68)",
+          "oklch(82% 0.003 68)",
+          "oklch(95% 0.003 68)"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel",
+        "canonical": "oklch(22.7% 0.004 85)",
+        "tonalRamp": [
+          "oklch(15% 0.004 85)",
+          "oklch(25% 0.004 85)",
+          "oklch(35% 0.004 85)",
+          "oklch(45% 0.004 85)",
+          "oklch(58% 0.004 85)",
+          "oklch(70% 0.004 85)",
+          "oklch(82% 0.004 85)",
+          "oklch(95% 0.004 85)"
+        ]
+      },
+      "panel-raised": {
+        "role": "neutral",
+        "displayName": "Raised",
+        "canonical": "oklch(26.1% 0.006 78)",
+        "tonalRamp": [
+          "oklch(15% 0.006 78)",
+          "oklch(25% 0.006 78)",
+          "oklch(35% 0.006 78)",
+          "oklch(45% 0.006 78)",
+          "oklch(58% 0.006 78)",
+          "oklch(70% 0.006 78)",
+          "oklch(82% 0.006 78)",
+          "oklch(95% 0.006 78)"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(31.1% 0.008 75)",
+        "tonalRamp": [
+          "oklch(15% 0.008 75)",
+          "oklch(25% 0.008 75)",
+          "oklch(35% 0.008 75)",
+          "oklch(45% 0.008 75)",
+          "oklch(58% 0.008 75)",
+          "oklch(70% 0.008 75)",
+          "oklch(82% 0.008 75)",
+          "oklch(95% 0.008 75)"
+        ]
+      },
+      "hairline-strong": {
+        "role": "neutral",
+        "displayName": "Strong Hairline",
+        "canonical": "oklch(40.0% 0.011 78)",
+        "tonalRamp": [
+          "oklch(15% 0.011 78)",
+          "oklch(25% 0.011 78)",
+          "oklch(35% 0.011 78)",
+          "oklch(45% 0.011 78)",
+          "oklch(58% 0.011 78)",
+          "oklch(70% 0.011 78)",
+          "oklch(82% 0.011 78)",
+          "oklch(95% 0.011 78)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(94.4% 0.006 85)",
+        "tonalRamp": [
+          "oklch(15% 0.006 85)",
+          "oklch(25% 0.006 85)",
+          "oklch(35% 0.006 85)",
+          "oklch(45% 0.006 85)",
+          "oklch(58% 0.006 85)",
+          "oklch(70% 0.006 85)",
+          "oklch(82% 0.006 85)",
+          "oklch(95% 0.006 85)"
+        ]
+      },
+      "ink-dim": {
+        "role": "neutral",
+        "displayName": "Dim Ink",
+        "canonical": "oklch(71.7% 0.013 80)",
+        "tonalRamp": [
+          "oklch(15% 0.013 80)",
+          "oklch(25% 0.013 80)",
+          "oklch(35% 0.013 80)",
+          "oklch(45% 0.013 80)",
+          "oklch(58% 0.013 80)",
+          "oklch(70% 0.013 80)",
+          "oklch(82% 0.013 80)",
+          "oklch(95% 0.013 80)"
+        ]
+      },
+      "ink-faint": {
+        "role": "neutral",
+        "displayName": "Faint Ink",
+        "canonical": "oklch(63.5% 0.013 80)",
+        "tonalRamp": [
+          "oklch(15% 0.013 80)",
+          "oklch(25% 0.013 80)",
+          "oklch(35% 0.013 80)",
+          "oklch(45% 0.013 80)",
+          "oklch(58% 0.013 80)",
+          "oklch(70% 0.013 80)",
+          "oklch(82% 0.013 80)",
+          "oklch(95% 0.013 80)"
+        ]
+      },
+      "ochre": {
+        "role": "primary",
+        "displayName": "Workbench Ochre",
+        "canonical": "oklch(76.7% 0.126 77)",
+        "tonalRamp": [
+          "oklch(15% 0.126 77)",
+          "oklch(25% 0.126 77)",
+          "oklch(35% 0.126 77)",
+          "oklch(45% 0.126 77)",
+          "oklch(58% 0.126 77)",
+          "oklch(70% 0.126 77)",
+          "oklch(82% 0.126 77)",
+          "oklch(95% 0.126 77)"
+        ]
+      },
+      "ochre-hover": {
+        "role": "primary",
+        "displayName": "Ochre Glow",
+        "canonical": "oklch(81.1% 0.116 78)",
+        "tonalRamp": [
+          "oklch(15% 0.116 78)",
+          "oklch(25% 0.116 78)",
+          "oklch(35% 0.116 78)",
+          "oklch(45% 0.116 78)",
+          "oklch(58% 0.116 78)",
+          "oklch(70% 0.116 78)",
+          "oklch(82% 0.116 78)",
+          "oklch(95% 0.116 78)"
+        ]
+      },
+      "on-ochre": {
+        "role": "primary",
+        "displayName": "On-Ochre",
+        "canonical": "oklch(19.2% 0.004 286)",
+        "tonalRamp": [
+          "oklch(15% 0.004 286)",
+          "oklch(25% 0.004 286)",
+          "oklch(35% 0.004 286)",
+          "oklch(45% 0.004 286)",
+          "oklch(58% 0.004 286)",
+          "oklch(70% 0.004 286)",
+          "oklch(82% 0.004 286)",
+          "oklch(95% 0.004 286)"
+        ]
+      },
+      "signal-green": {
+        "role": "secondary",
+        "displayName": "Signal Green",
+        "canonical": "oklch(78.1% 0.123 156)",
+        "tonalRamp": [
+          "oklch(15% 0.123 156)",
+          "oklch(25% 0.123 156)",
+          "oklch(35% 0.123 156)",
+          "oklch(45% 0.123 156)",
+          "oklch(58% 0.123 156)",
+          "oklch(70% 0.123 156)",
+          "oklch(82% 0.123 156)",
+          "oklch(95% 0.123 156)"
+        ]
+      },
+      "signal-orange": {
+        "role": "secondary",
+        "displayName": "Signal Orange",
+        "canonical": "oklch(72.5% 0.149 48)",
+        "tonalRamp": [
+          "oklch(15% 0.149 48)",
+          "oklch(25% 0.149 48)",
+          "oklch(35% 0.149 48)",
+          "oklch(45% 0.149 48)",
+          "oklch(58% 0.149 48)",
+          "oklch(70% 0.149 48)",
+          "oklch(82% 0.149 48)",
+          "oklch(95% 0.149 48)"
+        ]
+      },
+      "signal-red": {
+        "role": "secondary",
+        "displayName": "Signal Red",
+        "canonical": "oklch(73.2% 0.165 28)",
+        "tonalRamp": [
+          "oklch(15% 0.165 28)",
+          "oklch(25% 0.165 28)",
+          "oklch(35% 0.165 28)",
+          "oklch(45% 0.165 28)",
+          "oklch(58% 0.165 28)",
+          "oklch(70% 0.165 28)",
+          "oklch(82% 0.165 28)",
+          "oklch(95% 0.165 28)"
+        ]
+      },
+      "commit-red": {
+        "role": "tertiary",
+        "displayName": "Commit Red",
+        "canonical": "oklch(55.7% 0.180 23)",
+        "tonalRamp": [
+          "oklch(15% 0.18 23)",
+          "oklch(25% 0.18 23)",
+          "oklch(35% 0.18 23)",
+          "oklch(45% 0.18 23)",
+          "oklch(58% 0.18 23)",
+          "oklch(70% 0.18 23)",
+          "oklch(82% 0.18 23)",
+          "oklch(95% 0.18 23)"
+        ]
+      },
+      "commit-red-hover": {
+        "role": "tertiary",
+        "displayName": "Commit Red Pressed",
+        "canonical": "oklch(51.2% 0.168 24)",
+        "tonalRamp": [
+          "oklch(15% 0.168 24)",
+          "oklch(25% 0.168 24)",
+          "oklch(35% 0.168 24)",
+          "oklch(45% 0.168 24)",
+          "oklch(58% 0.168 24)",
+          "oklch(70% 0.168 24)",
+          "oklch(82% 0.168 24)",
+          "oklch(95% 0.168 24)"
+        ]
+      },
+      "user-bubble": {
+        "role": "neutral",
+        "displayName": "User Graphite",
+        "canonical": "oklch(27.8% 0.006 78)",
+        "tonalRamp": [
+          "oklch(15% 0.006 78)",
+          "oklch(25% 0.006 78)",
+          "oklch(35% 0.006 78)",
+          "oklch(45% 0.006 78)",
+          "oklch(58% 0.006 78)",
+          "oklch(70% 0.006 78)",
+          "oklch(82% 0.006 78)",
+          "oklch(95% 0.006 78)"
+        ]
+      },
+      "button-hover": {
+        "role": "neutral",
+        "displayName": "Button Hover",
+        "canonical": "oklch(28.6% 0.008 85)",
+        "tonalRamp": [
+          "oklch(15% 0.008 85)",
+          "oklch(25% 0.008 85)",
+          "oklch(35% 0.008 85)",
+          "oklch(45% 0.008 85)",
+          "oklch(58% 0.008 85)",
+          "oklch(70% 0.008 85)",
+          "oklch(82% 0.008 85)",
+          "oklch(95% 0.008 85)"
+        ]
+      },
+      "on-commit-red": {
+        "role": "tertiary",
+        "displayName": "On-Commit",
+        "canonical": "oklch(100% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(25% 0 0)",
+          "oklch(35% 0 0)",
+          "oklch(45% 0 0)",
+          "oklch(58% 0 0)",
+          "oklch(70% 0 0)",
+          "oklch(82% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "brand": {
+        "displayName": "Brand",
+        "purpose": "The lowercase 'pi' wordmark in ochre; used once."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Dialog titles."
+      },
+      "heading": {
+        "displayName": "Heading",
+        "purpose": "Markdown h1 in replies; h2 and below at 1.04rem, same weight."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Base text and the composer field."
+      },
+      "prose": {
+        "displayName": "Prose",
+        "purpose": "Assistant markdown inside the 48rem column."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Buttons and the Session panel; primary and commit buttons at 600."
+      },
+      "status": {
+        "displayName": "Status",
+        "purpose": "The top-bar status word; detail runs at 400 in dim ink with tabular figures."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Sender names, panel section titles, queue labels. Sentence case."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "Tool output, commands, thinking, ids, paths, model names, checkpoint fact, usage."
+      }
+    },
+    "shadows": [
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 1px #e0a84c",
+        "purpose": "Composer field focus, paired with an ochre border."
+      },
+      {
+        "name": "hollow-marker",
+        "value": "inset 0 0 0 1.5px #a8a39b",
+        "purpose": "Pending or missing tool step marker."
+      },
+      {
+        "name": "trouble-marker",
+        "value": "inset 0 0 0 2px #f0864a",
+        "purpose": "Warning status ring (round) and interrupted/aborted step marker (1px-radius square)."
+      },
+      {
+        "name": "live-pulse",
+        "value": "0 0 0 0 rgba(224,168,76,0.55) -> 0 0 0 0.5rem rgba(224,168,76,0)",
+        "purpose": "Running tool step dot only, 1.6s loop; off under reduced motion."
+      },
+      {
+        "name": "dialog-backdrop",
+        "value": "rgba(10, 9, 8, 0.72)",
+        "purpose": "Dims the page behind the confirmation dialog."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "All state transitions."
+      },
+      {
+        "name": "state-change",
+        "value": "150ms",
+        "purpose": "Button background/border, field border, chevron rotation."
+      },
+      {
+        "name": "pulse",
+        "value": "1.6s infinite",
+        "purpose": "Running step dot ring."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "max-width: 640px"
+      },
+      {
+        "name": "touch",
+        "value": "pointer: coarse"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Default action on the raised tone.",
+      "html": "<button class=\"ds-btn\">Session</button>",
+      "css": ".ds-btn{font-family:var(--sans);font-size:.875rem;line-height:1.3;padding:.4rem .9rem;border-radius:var(--radius);border:1px solid var(--border);background:var(--panel-raised);color:var(--text);cursor:pointer;transition:background-color 150ms var(--ease-out),border-color 150ms var(--ease-out);} .ds-btn:hover{border-color:var(--border-strong);background:#2c2a26;} .ds-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one ochre action per row (Send/Steer).",
+      "html": "<button class=\"ds-btn-primary\">Send</button>",
+      "css": ".ds-btn-primary{font-family:var(--sans);font-size:.875rem;line-height:1.3;padding:.4rem .9rem;border-radius:var(--radius);border:1px solid var(--border);background:var(--panel-raised);color:var(--text);cursor:pointer;transition:background-color 150ms var(--ease-out),border-color 150ms var(--ease-out);background:var(--accent-strong);border-color:var(--accent-strong);color:var(--on-accent);font-weight:600;} .ds-btn-primary:hover{background:var(--accent-strong-hover);border-color:var(--accent-strong-hover);} .ds-btn-primary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Entry point to a destructive or interrupting action (Abort, Restore...).",
+      "html": "<button class=\"ds-btn-danger\">Abort</button>",
+      "css": ".ds-btn-danger{font-family:var(--sans);font-size:.875rem;line-height:1.3;padding:.4rem .9rem;border-radius:var(--radius);border:1px solid var(--border);background:var(--panel-raised);color:var(--text);cursor:pointer;transition:background-color 150ms var(--ease-out),border-color 150ms var(--ease-out);color:var(--danger);border-color:rgba(var(--danger-rgb),.6);} .ds-btn-danger:hover{background:rgba(var(--danger-rgb),.12);border-color:var(--danger);} .ds-btn-danger:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}"
+    },
+    {
+      "name": "Commit Button",
+      "kind": "button",
+      "refersTo": "button-danger-solid",
+      "description": "Confirms a destructive dialog; never used elsewhere.",
+      "html": "<button class=\"ds-btn-commit\">Restore checkpoint</button>",
+      "css": ".ds-btn-commit{font-family:var(--sans);font-size:.875rem;line-height:1.3;padding:.4rem .9rem;border-radius:var(--radius);border:1px solid var(--border);background:var(--panel-raised);color:var(--text);cursor:pointer;transition:background-color 150ms var(--ease-out),border-color 150ms var(--ease-out);background:#c7383d;border-color:#c7383d;color:#fff;font-weight:600;} .ds-btn-commit:hover{background:#b32f34;border-color:#b32f34;} .ds-btn-commit:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}"
+    },
+    {
+      "name": "Composer Field",
+      "kind": "input",
+      "refersTo": "composer-input",
+      "description": "Message box on the ground tone inside the panel-toned composer; faint placeholder.",
+      "html": "<textarea class=\"ds-input\" rows=\"2\" placeholder=\"Message pi\"></textarea>",
+      "css": ".ds-input{display:block;width:100%;min-height:2.9rem;resize:none;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);padding:.55rem .75rem;font:1rem/1.45 var(--sans);transition:border-color 150ms var(--ease-out);} .ds-input::placeholder{color:var(--text-faint);} .ds-input:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);}"
+    },
+    {
+      "name": "Status Line",
+      "kind": "nav",
+      "refersTo": "topbar",
+      "description": "Top bar: ochre wordmark, tone marker with state word and tabular detail, Session button. Warning shows a hollow orange ring.",
+      "html": "<header class=\"ds-topbar\"><span class=\"ds-brand\">pi</span><p class=\"ds-status\"><span class=\"ds-dot\"></span><span class=\"ds-word\">Interrupted</span><span class=\"ds-detail\">2m ago</span></p><button class=\"ds-btn\">Session</button></header>",
+      "css": ".ds-topbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:.5rem .9rem;padding:.5rem 1rem;background:var(--panel);border-bottom:1px solid var(--border);color:var(--text);font-family:var(--sans);} .ds-brand{font-size:1.2rem;font-weight:800;letter-spacing:-.03em;color:var(--accent);} .ds-status{display:flex;align-items:center;gap:.5rem;margin:0;font-size:.95rem;font-weight:600;} .ds-dot{width:.55rem;height:.55rem;border-radius:50%;background:transparent;box-shadow:inset 0 0 0 2px var(--warn);} .ds-word{color:var(--warn);} .ds-detail{font-weight:400;color:var(--text-dim);font-variant-numeric:tabular-nums;} .ds-btn{font-family:var(--sans);font-size:.875rem;line-height:1.3;padding:.4rem .9rem;border-radius:var(--radius);border:1px solid var(--border);background:var(--panel-raised);color:var(--text);cursor:pointer;transition:background-color 150ms var(--ease-out),border-color 150ms var(--ease-out);} .ds-btn:hover{border-color:var(--border-strong);background:#2c2a26;} .ds-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}"
+    },
+    {
+      "name": "Reply",
+      "kind": "card",
+      "refersTo": "reply",
+      "description": "Assistant reply on the ground, no fill or border; faint time and mono model id.",
+      "html": "<div class=\"ds-reply\"><div class=\"ds-head\"><span class=\"ds-who\">pi</span><span class=\"ds-time\">14:02</span><span class=\"ds-model\">llama-4-scout</span></div><p class=\"ds-text\">Tests pass. I updated the parser and added <a href=\"#\">two cases</a>.</p></div>",
+      "css": ".ds-reply{padding:.1rem 0 .2rem;color:var(--text);font:1rem/1.6 var(--sans);} .ds-head{display:flex;gap:.6rem;align-items:baseline;margin-bottom:.25rem;} .ds-who{font-size:.8rem;font-weight:600;} .ds-time,.ds-model{font-size:.75rem;color:var(--text-faint);font-variant-numeric:tabular-nums;} .ds-model{margin-left:auto;font-family:var(--mono);} .ds-text{margin:.15rem 0;} .ds-text a{color:var(--text);text-decoration-color:var(--accent);text-underline-offset:.18em;} .ds-text a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}"
+    },
+    {
+      "name": "User Bubble",
+      "kind": "card",
+      "refersTo": "bubble-user",
+      "description": "Right-aligned user message in warm neutral graphite, the only filled entry; timestamp steps up to dim.",
+      "html": "<div class=\"ds-user\"><div class=\"ds-ububble\"><div class=\"ds-uhead\"><span class=\"ds-uwho\">you</span><span class=\"ds-utime\">14:01</span></div>Run the tests again.</div></div>",
+      "css": ".ds-user{display:flex;justify-content:flex-end;} .ds-ububble{max-width:min(40rem,88%);background:#2a2825;border:1px solid var(--border);border-radius:var(--radius);padding:.6rem .9rem .7rem;color:var(--text);font:1rem/1.5 var(--sans);} .ds-uhead{display:flex;gap:.6rem;align-items:baseline;margin-bottom:.25rem;} .ds-uwho{font-size:.8rem;font-weight:600;} .ds-utime{font-size:.75rem;color:var(--text-dim);font-variant-numeric:tabular-nums;}"
+    },
+    {
+      "name": "Tool Steps",
+      "kind": "custom",
+      "refersTo": "tool-steps",
+      "description": "A reply's tool calls as one connected list: shared edge, hairline row dividers; running, done and interrupted rows.",
+      "html": "<div class=\"ds-steps\"><details class=\"ds-step ds-ok\"><summary class=\"ds-sum\"><span class=\"ds-sdot\"></span><span class=\"ds-name\">read</span><span class=\"ds-target\">src/parse.ts</span><span class=\"ds-sstat\">done</span></summary></details><details class=\"ds-step ds-int\"><summary class=\"ds-sum\"><span class=\"ds-sdot\"></span><span class=\"ds-name\">edit</span><span class=\"ds-target\">src/parse.ts</span><span class=\"ds-sstat\">interrupted</span></summary></details><details class=\"ds-step ds-run\" open><summary class=\"ds-sum\"><span class=\"ds-sdot\"></span><span class=\"ds-name\">bash</span><span class=\"ds-target\">npm test</span><span class=\"ds-sstat\">running</span></summary><div class=\"ds-body\"><pre class=\"ds-out\">PASS src/parse.test.js</pre></div></details></div>",
+      "css": ".ds-steps{display:grid;grid-template-columns:minmax(0,1fr);border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);overflow:hidden;font:.85rem var(--sans);color:var(--text);} .ds-step+.ds-step{border-top:1px solid var(--border);} .ds-sum{display:flex;align-items:center;gap:.55rem;min-height:2.1rem;padding:.3rem .7rem;cursor:pointer;list-style:none;} .ds-sum::-webkit-details-marker{display:none;} .ds-sum::after{content:\"\";flex:none;width:.4rem;height:.4rem;margin-left:.2rem;border-right:1.5px solid var(--text-dim);border-bottom:1.5px solid var(--text-dim);transform:translateY(-.1rem) rotate(45deg);transition:transform 150ms var(--ease-out);} .ds-step[open]>.ds-sum::after{transform:translateY(.1rem) rotate(-135deg);} .ds-step[open]>.ds-sum{border-bottom:1px solid var(--border);} .ds-sum:focus-visible{outline:2px solid var(--accent);outline-offset:2px;} .ds-sdot{flex:none;width:.5rem;height:.5rem;border-radius:50%;background:var(--text-dim);} .ds-ok .ds-sdot{background:var(--ok);} .ds-int{background:rgba(var(--warn-rgb),.06);} .ds-int .ds-sdot{border-radius:1px;background:transparent;box-shadow:inset 0 0 0 2px var(--warn);} .ds-int .ds-sstat{color:var(--warn);} .ds-run .ds-sdot{background:var(--accent);animation:ds-pulse 1.6s var(--ease-out) infinite;} .ds-run .ds-sstat{color:var(--accent);} @keyframes ds-pulse{0%{box-shadow:0 0 0 0 rgba(224,168,76,.55)}100%{box-shadow:0 0 0 .5rem rgba(224,168,76,0)}} .ds-name{font-family:var(--mono);font-weight:600;} .ds-target{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono);font-size:.8rem;color:var(--text-dim);} .ds-sstat{margin-left:auto;font-size:.78rem;color:var(--text-dim);} .ds-body{padding:.55rem .7rem .7rem;} .ds-out{margin:0;padding:.5rem .65rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);font:.8rem/1.5 var(--mono);white-space:pre-wrap;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Lit Workbench",
+    "overview": "A dark working surface that reads as a considered tool rather than the default developer dark mode. Three steps of warm graphite carry all structure; one ochre accent marks the few things that matter right now: the brand, the primary action, keyboard focus, and work in progress. Everything else is ink in three tiers and hairlines.\n\nThe surface is dense but calm. A single reading column (48rem) holds the conversation, with a sticky status bar above and the composer below. Replies sit directly on the ground like a document; only the visitor's own messages are filled. State is carried by small markers and coloured words, never by large fills, and trouble changes shape as well as colour, so a glance from a phone answers \"working, finished, or in trouble\" without the screen shouting. Depth comes from tonal steps and 1px borders, not shadows.\n\nIt rejects blue-black grounds, link-blue accents and rounded card soup. Corners are a tight 4px everywhere; borders are hairlines.",
+    "keyCharacteristics": [
+      "Three warm graphite tonal steps (ground, panel, raised; red > green > blue) with hairline borders for structure.",
+      "One ochre accent, reserved for brand, primary action, focus and live work.",
+      "Status as small markers plus coloured text in a fixed four-tone vocabulary; trouble is hollow and square-cornered.",
+      "Replies on the ground, user messages filled, tool steps as one connected list.",
+      "Schibsted Grotesk for UI and prose; JetBrains Mono only for code, paths, ids and machine figures.",
+      "4px corners, 1px rules, flat surfaces, no decorative shadows."
+    ],
+    "rules": [
+      {
+        "name": "The One Ochre Rule",
+        "body": "Ochre marks only brand, primary action, focus and live work. If an element is none of these, it is not ochre.",
+        "section": "colors"
+      },
+      {
+        "name": "The Four Tones Rule",
+        "body": "Status speaks in exactly four tones: working (ochre), ok (green), warn (orange), danger (red), plus idle (dim ink). The page markers, step markers and favicon badge use the same colour mapping.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tint, Not Fill Rule",
+        "body": "Signal colours appear as text, markers, borders and 6-12% tints. Only Commit Red is ever a solid fill.",
+        "section": "colors"
+      },
+      {
+        "name": "The Faint Floor Rule",
+        "body": "Faint Ink is only used on ground, panel or raised. On any lighter fill, step up to Dim Ink.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mono Means Literal Rule",
+        "body": "JetBrains Mono is for code, paths, ids, model names and machine figures only. Never for UI labels, headings, banners or status prose.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Figures Rule",
+        "body": "Elapsed times, timestamps, usage and tables use `font-variant-numeric: tabular-nums` so ticking numbers do not jitter.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tone Is Depth Rule",
+        "body": "Lift a surface by stepping it to the next graphite tone and giving it a strong hairline, never by adding a drop shadow.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Trouble Changes Shape Rule",
+        "body": "Working and finished are filled; trouble is hollow (and square on steps). Never signal a warning by colour alone.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "**Do** keep every surface on the three warm graphite steps (ground, panel, raised) and separate them with 1px hairlines.",
+      "**Do** reserve ochre for brand, the primary action, focus and live work.",
+      "**Do** express state through the four-tone vocabulary (ochre, green, orange, red), and make trouble hollow as well as orange or red.",
+      "**Do** write signal tints through the RGB channel tokens (`--warn-rgb`, `--danger-rgb`).",
+      "**Do** use Faint Ink only on ground, panel and raised; step up to Dim Ink inside the user bubble.",
+      "**Do** use 4px corners on every rectangle, circles for healthy markers, and 1px for every rule.",
+      "**Do** set code, paths, ids and figures in JetBrains Mono, and use tabular figures for anything that ticks.",
+      "**Do** give every control a 2px ochre focus outline and a 2.75rem minimum height on coarse pointers."
+    ],
+    "donts": [
+      "**Don't** use blue-black grounds, link-blue accents or blue-tinted user bubbles.",
+      "**Don't** fill or border assistant replies; only the user's message is a bubble.",
+      "**Don't** add drop shadows for elevation; step the tone instead.",
+      "**Don't** use larger radii or pill shapes for containers or buttons.",
+      "**Don't** fill large areas with signal colours; tints stay at 6-12% and only Commit Red is solid.",
+      "**Don't** use the warning colour for neutral labels such as queue modes.",
+      "**Don't** set UI labels, headings, banners or status prose in mono."
+    ]
+  }
+}

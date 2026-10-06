@@ -2,40 +2,115 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark" />
-    <title>Pi — private session</title>
+    <meta name="theme-color" content="#1d1c1a" />
+    <title>pi</title>
+    <link id="favicon" rel="icon" type="image/svg+xml" href="data:," />
+    <link
+      rel="preload"
+      href="/fonts/schibsted-grotesk-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <link rel="stylesheet" href="/style.css" />
     <script src="/app.js" defer></script>
   </head>
   <body>
+    <a class="skip-link" href="#input">Skip to message box</a>
+
     <header class="topbar">
       <h1 class="brand">pi</h1>
-      <div class="chips">
-        <span id="session-chip" class="chip" title="Session identifier">session —</span>
-        <span id="conn-chip" class="chip conn-connecting" role="status" aria-live="polite"
-          >connecting…</span
-        >
-        <span id="busy-chip" class="chip" role="status" aria-live="polite">idle</span>
-        <span id="model-chip" class="chip" title="Model of the most recent assistant response"
-          >model —</span
-        >
-        <span id="workspace-chip" class="chip" title="Workspace state and latest checkpoint"
-          >workspace —</span
-        >
+      <div class="status-block">
+        <p id="status" class="status status-connecting">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="status-text" class="status-text">Connecting…</span>
+          <span id="status-detail" class="status-detail"></span>
+        </p>
+        <p id="workspace-summary" class="workspace-summary"></p>
+        <!-- Announces state changes only; the ticking elapsed time stays silent. -->
+        <p id="announcer" class="visually-hidden" role="status" aria-live="polite"></p>
       </div>
-      <div class="topbar-actions">
-        <button id="checkpoint-btn" type="button" disabled>Checkpoint</button>
-        <button
-          id="restore-btn"
-          type="button"
-          title="Replace all project files with the latest checkpoint"
-          disabled
-        >
-          Restore
-        </button>
-      </div>
+      <button
+        id="session-btn"
+        class="session-btn"
+        type="button"
+        popovertarget="session-panel"
+        aria-controls="session-panel"
+      >
+        Session
+      </button>
     </header>
+
+    <div id="session-panel" class="session-panel" popover aria-label="Session details">
+      <dl class="facts">
+        <div>
+          <dt>Connection</dt>
+          <dd id="fact-connection">—</dd>
+        </div>
+        <div>
+          <dt>Session</dt>
+          <dd id="fact-session" class="mono">—</dd>
+        </div>
+        <div>
+          <dt>Model</dt>
+          <dd id="fact-model" class="mono">—</dd>
+        </div>
+        <div>
+          <dt>Workspace</dt>
+          <dd id="fact-workspace">—</dd>
+        </div>
+        <div>
+          <dt>Latest checkpoint</dt>
+          <dd id="fact-checkpoint" class="mono">—</dd>
+        </div>
+        <div>
+          <dt>Usage</dt>
+          <dd id="fact-usage" class="mono">—</dd>
+        </div>
+      </dl>
+      <div class="panel-actions">
+        <button id="panel-restore-btn" class="danger" type="button" disabled>Restore…</button>
+      </div>
+      <h2 class="panel-title">Keyboard</h2>
+      <dl class="shortcuts">
+        <div>
+          <dt><kbd>Enter</kbd></dt>
+          <dd>Send · steer while pi is working</dd>
+        </div>
+        <div>
+          <dt><kbd class="kbd-alt">Alt</kbd> <kbd>Enter</kbd></dt>
+          <dd>Follow up while pi is working</dd>
+        </div>
+        <div>
+          <dt><kbd>Shift</kbd> <kbd>Enter</kbd></dt>
+          <dd>New line</dd>
+        </div>
+        <div>
+          <dt><kbd>Esc</kbd></dt>
+          <dd>Abort · press twice while typing</dd>
+        </div>
+        <div>
+          <dt><kbd>/</kbd></dt>
+          <dd>Focus the message box</dd>
+        </div>
+      </dl>
+    </div>
+
+    <dialog id="restore-dialog" class="confirm-dialog" aria-labelledby="restore-title">
+      <form method="dialog">
+        <h2 id="restore-title" class="confirm-title">Restore the workspace?</h2>
+        <p id="restore-body" class="confirm-body"></p>
+        <p id="restore-busy" class="confirm-warn" hidden>
+          pi is working right now. Restoring changes files under the current run.
+        </p>
+        <div class="confirm-actions">
+          <button value="cancel" autofocus>Cancel</button>
+          <button value="restore" class="danger-solid">Restore checkpoint</button>
+        </div>
+      </form>
+    </dialog>
 
     <p id="workspace-error" class="banner banner-error" role="alert" hidden></p>
     <section id="notices" class="notices" aria-label="Session notices" hidden></section>
@@ -60,23 +135,17 @@
       <label class="visually-hidden" for="input">Message</label>
       <textarea
         id="input"
-        rows="3"
-        placeholder="Message pi — Enter sends, Shift+Enter adds a newline"
+        rows="2"
+        placeholder="Message pi"
         autocomplete="off"
         spellcheck="true"
+        aria-describedby="composer-hint"
       ></textarea>
       <div class="composer-row">
-        <label class="when-label" for="when-busy" title="Applies while pi is already working"
-          >If busy</label
-        >
-        <select id="when-busy">
-          <option value="steer">steer</option>
-          <option value="followUp">follow up</option>
-        </select>
-        <span id="usage-line" class="usage-line"></span>
-        <span class="composer-spacer"></span>
         <button id="abort-btn" type="button" class="danger" hidden>Abort</button>
-        <button id="send-btn" type="submit">Send</button>
+        <p id="composer-hint" class="composer-hint"></p>
+        <button id="followup-btn" type="button" hidden>Follow up</button>
+        <button id="send-btn" type="submit" class="primary">Send</button>
       </div>
     </form>
   </body>
