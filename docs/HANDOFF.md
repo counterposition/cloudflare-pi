@@ -14,12 +14,16 @@ Completion means demonstrating the actual protected browser application end to e
 
 **No acceptance steps remain pending.** Safari resumed the same authenticated session and preserved workspace. After the user entered Responsive Design Mode, native viewport fields were set and committed to **390×844**; the actual narrow interface and a new read-only tool turn were verified. Keep the documented platform and test-coverage limits explicit.
 
-- Repository: `<repo>`.
-- Upstream reference: `<pi-checkout>`, Pi 1.0.1.
-- Live URL: <https://cloudflare-pi.<your-subdomain>.workers.dev>.
-- Current deployed Worker version: `<worker-version>`.
+**`PiHarness` migration (docs/PIHARNESS_MIGRATION.md) is deployed and re-accepted.** `Session` now runs on `Lifecycle` + `PiHarness` (`agents@0.26.0`). Production acceptance on the stable session covered the table migration with the transcript intact, `accepted: false` for a pre-migration requestId, real tools with checkpoint-before-success, an `interrupted` receipt plus alarm-driven resume across a mid-run redeploy, R2 restore, and Safari at 390×844. It did not cover the idle container teardown, which didn't happen within ~15 minutes. Open risk: SSE `events` streams can exceed the Durable Object CPU limit during long streamed runs; see `docs/VERIFICATION.md`. Gates: format, typecheck, lint, **8 files / 107 tests**, dry-run build. An independent GPT 6.1 Sol (high) review returned no findings.
+
+Open issues for the next agent, with evidence and acceptance criteria: `docs/OPEN_ISSUES.md`.
+
+- Repository: `cloudflare-pi` (this repository).
+- Upstream reference: a local checkout of Pi 1.0.1.
+- Live URL: `https://cloudflare-pi.<your-subdomain>.workers.dev`.
+- Current deployed Worker version: the latest deployment (version ID omitted).
 - Authenticated `/api/session` returns HTTP 200 and the protected browser renders the durable session. The former `ModelsImpl is not a constructor` error is gone.
-- Stable verified session: `<session-id>`.
+- Stable verified session: the owner's single production session (Durable Object ID omitted).
 - Runtime factory imports remain at **`@earendil-works/pi-ai/models`**; inference remains exclusively the native Workers AI binding.
 - Continuation corrections: storage-opening failure adopts a fresh closed-owner-safe SQL gate; recovery preserves configured per-mode queue selection; delayed admission receipts clear only their own pending record; compaction-only work exposes Abort; successful hydration clears only hydration-owned errors.
 - Parent gates pass: frozen lockfile install with pnpm 12.9.1, format, typecheck, lint, **7 files / 97 tests**, Worker and Linux image dry-run. The real-workerd regression exercises Session's failed-open retry branch; recovery regressions exercise the real Pi Harness.
@@ -66,7 +70,7 @@ Wrangler is authenticated to the owner's account (`<account-id>`). `pnpm exec wr
 - Native AI binding `AI`.
 - Authenticated static assets binding `ASSETS`, `run_worker_first: true`.
 - `DirectoryBackupGateway` WorkerEntrypoint export, RPC-only, not publicly routed.
-- Access team `<your-team>.cloudflareaccess.com` and application audience, already configured. These are non-secret values; no account/provider credentials were written to the repo.
+- Access team domain (`<your-team>.cloudflareaccess.com`) and application audience, already configured. These are non-secret values; no account/provider credentials were written to the repo.
 
 Access application ID: `<access-app-id>`. It protects the live hostname with an owner-only email allow policy. Anonymous `curl` returned **302 to Cloudflare Access**, not application data.
 
@@ -87,33 +91,34 @@ One persistent session/workspace per verified Access identity. Identity is SHA-2
 
 Public routes:
 
-| Route                          | Result                                           |
-| ------------------------------ | ------------------------------------------------ |
-| `GET /api/session`             | Snapshot, creates/returns the stable session     |
-| `GET /api/session/events`      | SSE event `snapshot` containing a snapshot       |
-| `POST /api/session/messages`   | `{text, requestId, whenBusy: "steer"             | "followUp"}`; 202 `{submissionId}` |
-| `POST /api/session/abort`      | 204                                              |
-| `POST /api/session/checkpoint` | Latest checkpoint metadata                       |
-| `POST /api/session/restore`    | Restore latest own checkpoint; snapshot response |
+| Route                          | Result                                                                                                                       |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/session`             | Snapshot, creates/returns the stable session                                                                                 |
+| `GET /api/session/events`      | SSE event `snapshot` containing a snapshot                                                                                   |
+| `POST /api/session/messages`   | `{text, requestId, whenBusy: "steer" \| "followUp"}`; 202 `{operationId, accepted}` (`accepted: false` on a requestId retry) |
+| `POST /api/session/abort`      | 204                                                                                                                          |
+| `POST /api/session/checkpoint` | Latest checkpoint metadata                                                                                                   |
+| `POST /api/session/restore`    | Restore latest own checkpoint; snapshot response                                                                             |
 
 The current compatibility date enables enhanced RPC error serialization: error name/message and own serializable `status`/`error` properties survive RPC; custom prototypes do not. Router matches `SessionApiError` by name and properties, not remote `instanceof`.
 
 ### Durable harness and recovery
 
-- `src/session.ts`: actual Pi `Harness`, provider/registry reconstruction, owner binding, serialized admissions, background-aware inspection, alarms, abort, committed-state SSE and busy guards.
+- `src/session.ts`: `Lifecycle` + `PiHarness` hosting of the actual Pi `Harness` (the factory rebuilds provider/registry and creates the root with the workspace `cwd`), owner binding, serialized admissions, background-aware inspection, abort including background tasks, committed-state SSE and busy guards. `Session` defines no `alarm()`: `Lifecycle` installs its own and drives `PiHarness`'s wake jobs and the host recovery job.
+- `src/pi-table-migration.ts`: single-transaction rename of the pre-`PiHarness` unprefixed Pi tables to `pi_`, run by a `Lifecycle` capability installed ahead of `PiHarness` (which opens its store before calling the host factory). If both layouts exist it refuses, failing startup per call (repairable in place), never the constructor. Includes the `restoreLegacyPiTables` rollback inverse.
 - `src/coding.ts`: actual Pi read/write/edit/bash tools, unchanged schemas/names/replay policies; sequential execution through workspace management.
-- `src/recovery.ts`: single portable production implementation for Pi 1.0.1's taskless queued-input recovery. Tests import THIS helper; the earlier copied test algorithm was removed.
+- `src/recovery.ts`: single portable production implementation for Pi 1.0.1/1.0.2's taskless queued-input recovery, plus `driveQueuedRecovery`, the host `Lifecycle` job that runs it and re-wakes `PiHarness` for the recovered run. Tests (node and workerd) import THIS code; the earlier copied test algorithm was removed.
 - `src/models.ts`: native Workers AI `Ai.run` bridge through Pi's actual OpenAI-compatible provider/decoder. Default `@cf/deepseek-ai/deepseek-v4-flash-0731`, context 1,048,576, output bounded 8,192, harness thinking off. No external provider inference or ambient credential/catalog initialization.
 
-ONE `DurableSqliteDatabase` gate coordinates Pi storage, app metadata, and native alarm transactions. No uncoordinated `ctx.storage.put/get` metadata during Pi transactions.
+Pi's tables (`pi_` prefix) sit behind `PiHarness`'s private SQL queue. App SQL never opens an async transaction beside one of Pi's: the owner check is one `transactionSync`, and checkpoint pointers (`app_workspace_checkpoints`, through a `DurableSqliteDatabase` gate) are single statements. No uncoordinated `ctx.storage.put/get` metadata during Pi transactions.
 
-Admission/inspection/idle alarm deletion share the same boundary. A durable next alarm is primed BEFORE fallible initialization, container restore, inspection, or inbox recovery; failure rearms it. Failure cleanup closes the old harness/storage, then adopts a fresh usable database gate rather than retrying a permanently closed facade. No concurrent duplicate harness owners.
+Durable wake-ups are `Lifecycle` jobs (`cf_agents_jobs`): `PiHarness`'s per-session wake job and the host `recover-queued` job are both pushed BEFORE an input is admitted; the recovery job heartbeats every 1 s while unsettled work exists and never lets a thrown pass delete its row. The host hooks (`onStart`, `onJob`) are instance properties, so Workers RPC refuses them (workerd: "The RPC receiver's prototype does not implement …"). `Lifecycle` startup runs inside `blockConcurrencyWhile`, so the harness factory does no container or R2 work; the workspace warms up through a non-blocking `ensureReady()` and again in front of every tool, with one execution-env adapter reset in place per container incarnation. A failed startup rejects the call honestly and is retried by the next call; the factory closes any Harness a failed earlier startup left open.
 
 Pi 1.0.1 can strand accepted follow-ups after a generation error without any live task. `Harness.resume()` and retrying the same `requestId` alone do NOT place them. The production helper uses public Pi Tx/Inbox/GenerationTask APIs to recover them, including resets and honest stale-write settlement. It does not inject synthetic wake prompts or invent new admission IDs.
 
 ### Filesystem, shell, and checkpoints
 
-- `src/adapters/durable-sqlite.ts`: portable Pi SQL facade over DO SQL, async transactions, serial barriers, escaped-handle rejection, logical close.
+- `src/adapters/durable-sqlite.ts`: portable SQL facade over DO SQL (serial barriers, async transactions, escaped-handle rejection, logical close); in production it gates the checkpoint-pointer table only. Tests also open the legacy unprefixed Pi store over it (`test/legacy-pi-store.ts`).
 - `src/adapters/sandbox-env.ts`: full portable `ExecutionEnv` using actual Container exec and SDK Files.
 - `src/adapters/sandbox-shell.ts`: real shell launcher, watchdog control protocol, retained reader client.
 - `container/fs-helper.mjs`: real Node filesystem operations and persistent FD reader protocol.
@@ -178,15 +183,15 @@ Additional deployed observations during continuation:
 
 - Browser bash/read/edit changed `live-proof.txt` from alpha to beta. The actual SHA-256 matched an independent parent calculation: `33d4de0aaf865812b4aaed873feb41ce35e8e2f0c377be91b8053411947dc611`.
 - Navigation away while accepted work ran, then return, preserved the session and completed `detach-proof.txt` output.
-- A simulated lost receipt retained the real accepted admission UUID `<admission-id>`. UI retry and identical retry after redeployment returned original `submissionId: 44`; `retry-proof.txt` remained exactly one line.
+- A simulated lost receipt retained a real accepted admission UUID. UI retry and identical retry after redeployment returned original `submissionId: 44`; `retry-proof.txt` remained exactly one line.
 - The Checkpoint UI and database snapshot agreed on the published pointer. The authenticated Restore API returned HTTP 200. A later dedicated-window check visually observed the native confirmation dialog and the successful UI restore message.
 - A real detached Node writer recorded PID 207. After the checkpoint boundary, `/proc/207/stat` reported zombie state `Z`; its file remained 145 bytes over the next observation interval.
 - Controlled redeployment interrupted an actual unsafe bash call after `UNSAFE_RUNNING`, during `sleep 180`. Its real receipt had `isError: true` and diagnostic code `interrupted`: `Tool bash was interrupted and may have partially run`. No unsafe replay occurred. The uncheckpointed `interrupted-proof.txt` was absent after recovery.
 - Genuine container recreation was observed: an arbitrary `/tmp` sentinel vanished and PID 1 start time changed from 1996484 to 13550211, while the completed project file hash, detach marker, retry line count, and writer output survived. The UI displayed the checkpoint-restored-after-session-restart notice.
 - Desktop protected UI hydration, transcript, live tool output, notices, and composer were visually inspected. The browser-only correction smoke preserved newer pending admission B after delayed receipt A, exposed compaction Abort, cleared a hydration error, and retained an unrelated mutation error; that throwaway VM smoke is not claimed as a full browser test.
-- Generic Cloudflare `internal error; reference = …` diagnostics appeared during otherwise completed turns (for example `hgb3eu7mq8qq5gqoc1p7l8ek`); no actionable stack was provided. A structured JSON tail also observed durable-object events with outcome `ok` and empty exceptions. Do not suppress or infer a root cause from these opaque diagnostics.
+- Generic Cloudflare `internal error; reference = …` diagnostics appeared during otherwise completed turns; no actionable stack was provided. A structured JSON tail also observed durable-object events with outcome `ok` and empty exceptions. Do not suppress or infer a root cause from these opaque diagnostics.
 - Owned workspace verification scripts (`spawn.js`, `writer.js`, writer PID file, and boot marker) were removed through a real checkpointed bash tool. `live-proof.txt`, `detach-proof.txt`, `retry-proof.txt`, and `writer-proof.txt` remain inspectable evidence; the hash and one-line retry count were reconfirmed after cleanup.
-- After the user signed into Access in Safari, its actual UI resumed session `<session-id>`, the original transcript, and checkpoint `<checkpoint-id>`. A new Safari composer prompt executed three genuine read tools: `live-proof.txt` returned `cloudflare-pi-live-20261004 beta`, `detach-proof.txt` returned `detached-completed-20261004`, and `retry-proof.txt` returned one `retry-once-20261004` line. The session returned idle. No credentials or cookies were copied between browsers.
+- After the user signed into Access in Safari, its actual UI resumed the stable verified session, the original transcript, and the published checkpoint. A new Safari composer prompt executed three genuine read tools: `live-proof.txt` returned `cloudflare-pi-live-20261004 beta`, `detach-proof.txt` returned `detached-completed-20261004`, and `retry-proof.txt` returned one `retry-once-20261004` line. The session returned idle. No credentials or cookies were copied between browsers.
 - In Safari Responsive Design Mode at 390×844, transcript text and notices wrapped, and status chips, Checkpoint/Restore, composer, If busy, and Send controls remained visible. A new indexed Send from that viewport executed the real read tool, returned `cloudflare-pi-live-20261004 beta`, exposed busy/Abort, and returned idle. No source changes were needed.
 
 **Verification limits:** responsive proof is Safari viewport emulation, not physical-phone testing; touch gestures, software keyboards, broader device coverage, and load/soak behavior were not exercised. A background keyboard-scroll command did not visibly move the transcript and is not claimed as scroll-interaction proof. Generic Cloudflare diagnostic references remain unexplained without an actionable stack.
@@ -194,7 +199,7 @@ Additional deployed observations during continuation:
 ## Post-verification operating notes
 
 1. All ten tracked delivery/acceptance items have passed. The deployed version and inspectable workspace proof files are listed above.
-2. README.md documents setup, required Access issuer/audience config, Workers AI, deployment, persistence/network/background-process boundaries, container inactivity versus retained session state, billing, and observed verification limits.
+2. README.md is for people new to the project: what it is, how to use and deploy it, limits, and costs. Design detail is in docs/ARCHITECTURE.md, observed verification and its limits in docs/VERIFICATION.md, and toolchain and gates in docs/DEVELOPMENT.md.
 3. Keep parent-owned gates and independent Sol review on substantive future changes. Do not commit unless requested. Never delete production R2 checkpoints still referenced by the session.
 4. Browser app windows are the user's. Do not foreground, switch their tabs, or close user-adopted windows during automation; leave Safari's selected responsive viewport intact.
 
