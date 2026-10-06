@@ -1,0 +1,20 @@
+// Test-only Wrangler config for test/piharness.test.ts: two minimal hosts of `PiHarness` over
+// `Lifecycle` (test/piharness.fixture.ts), without the application worker, AI, R2, or containers.
+{
+  "name": "cloudflare-pi-piharness-tests",
+  "main": "./piharness.fixture.ts",
+  "compatibility_date": "2026-10-03",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [
+      { "name": "HARNESS_ONLY", "class_name": "HarnessOnlyHost" },
+      { "name": "RECOVERING", "class_name": "RecoveringHost" },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["HarnessOnlyHost", "RecoveringHost"],
+    },
+  ],
+}

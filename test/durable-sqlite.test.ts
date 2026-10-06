@@ -24,7 +24,8 @@ import type {
 import { describe, expect, it } from "vitest";
 import { Session } from "../src/session";
 import type { AppEnv, SessionIdentity } from "../src/env";
-import { DurableSqliteDatabase, openDurableStorage } from "../src/adapters/durable-sqlite";
+import { DurableSqliteDatabase } from "../src/adapters/durable-sqlite";
+import { openDurableStorage } from "./legacy-pi-store";
 
 // `env` from `cloudflare:workers` is typed `Cloudflare.Env` by @cloudflare/workers-types; merge
 // the test config's SESSIONS binding into that interface instead of a pool-specific alias.
@@ -327,98 +328,126 @@ describe("DurableSqliteDatabase over Durable Object SQL", () => {
   });
 });
 
-describe("Session initialization gate recovery over real workerd storage", () => {
-  it("retries initialization on a fresh gate after a failed Pi storage open", async () => {
-    const id = env.SESSIONS.newUniqueId();
-    await runInDurableObject(env.SESSIONS.get(id), async (_instance, state) => {
-      // Test-only availability handles (never behavior): Session requires a container, the
-      // backup gateway export, and the AI binding handle before its initializer can reach the
-      // storage stage under test. The handles are inert — the initializer runs over real workerd
-      // storage and, once storage succeeds, fails honestly at the unavailable container image
-      // boundary. No production behavior is mocked.
-      const container = { running: false, images: {} };
-      const exported = { DirectoryBackupGateway: () => undefined };
-      const ai = {
-        run(): never {
-          throw new Error("test AI binding must never be called");
-        },
-      };
-      const proxiedState = new Proxy(state, {
-        get(target, property) {
-          if (property === "container") return container;
-          if (property === "exports") return exported;
-          const value = Reflect.get(target, property, target);
-          return typeof value === "function" ? value.bind(target) : value;
-        },
-      });
+/**
+ * Runs `run` against a real `Session` over the named object's native workerd storage, with
+ * test-only availability handles (never behavior): the harness factory builds a
+ * WorkspaceManager, which needs a container handle and the backup gateway export, and the
+ * models need an AI binding handle. Startup never touches the container (the workspace warms
+ * up lazily and reports its own failure on the status), and nothing here calls AI.
+ */
+async function withTestSession(
+  name: string,
+  run: (session: Session, state: DurableObjectState) => Promise<void>,
+): Promise<void> {
+  // Lifecycle requires `ctx.id.name`, which only named ids expose.
+  await runInDurableObject(env.SESSIONS.getByName(name), async (_instance, state) => {
+    const container = { running: false, images: {} };
+    const exported = { DirectoryBackupGateway: () => undefined };
+    const ai = {
+      run(): never {
+        throw new Error("test AI binding must never be called");
+      },
+    };
+    const proxiedState = new Proxy(state, {
+      get(target, property) {
+        if (property === "container") return container;
+        if (property === "exports") return exported;
+        const value = Reflect.get(target, property, target);
+        return typeof value === "function" ? value.bind(target) : value;
+      },
+    });
 
-      // workerd's DurableObject constructor accepts only a native state, so the Session is built
-      // with the real one and the availability handles are layered on afterward: shadow the
-      // instance `ctx` when the runtime exposes it as a shadowable property, otherwise define
-      // the test-only properties on the native state and restore them when the test ends.
-      const session = new Session(state, { ...env, AI: ai } as unknown as AppEnv);
-      const shadowableCtx = session as unknown as { ctx?: DurableObjectState };
-      let restoreNativeState: (() => void) | undefined;
-      if (shadowableCtx.ctx !== undefined) {
-        Object.defineProperty(shadowableCtx, "ctx", { value: proxiedState, configurable: true });
-      } else {
-        const previousContainer = Object.getOwnPropertyDescriptor(state, "container");
-        const previousExports = Object.getOwnPropertyDescriptor(state, "exports");
-        Object.defineProperty(state, "container", { value: container, configurable: true });
-        Object.defineProperty(state, "exports", { value: exported, configurable: true });
-        restoreNativeState = () => {
-          for (const [property, descriptor] of [
-            ["container", previousContainer],
-            ["exports", previousExports],
-          ] as const) {
-            if (descriptor !== undefined) {
-              Object.defineProperty(state, property, descriptor);
-            } else {
-              delete (state as unknown as Record<string, unknown>)[property];
-            }
+    // workerd's DurableObject constructor accepts only a native state, so the Session is built
+    // with the real one and the availability handles are layered on afterward: shadow the
+    // instance `ctx` when the runtime exposes it as a shadowable property, otherwise define
+    // the test-only properties on the native state and restore them when the test ends.
+    const session = new Session(state, { ...env, AI: ai } as unknown as AppEnv);
+    const shadowableCtx = session as unknown as { ctx?: DurableObjectState };
+    let restoreNativeState: (() => void) | undefined;
+    if (shadowableCtx.ctx !== undefined) {
+      Object.defineProperty(shadowableCtx, "ctx", { value: proxiedState, configurable: true });
+    } else {
+      const previousContainer = Object.getOwnPropertyDescriptor(state, "container");
+      const previousExports = Object.getOwnPropertyDescriptor(state, "exports");
+      Object.defineProperty(state, "container", { value: container, configurable: true });
+      Object.defineProperty(state, "exports", { value: exported, configurable: true });
+      restoreNativeState = () => {
+        for (const [property, descriptor] of [
+          ["container", previousContainer],
+          ["exports", previousExports],
+        ] as const) {
+          if (descriptor !== undefined) {
+            Object.defineProperty(state, property, descriptor);
+          } else {
+            delete (state as unknown as Record<string, unknown>)[property];
           }
-        };
+        }
+      };
+    }
+    try {
+      await run(session, state);
+    } finally {
+      restoreNativeState?.();
+    }
+  });
+}
+
+describe("Session startup recovery over real workerd storage", () => {
+  const identity: SessionIdentity = { id: "owner-1", email: "owner@example.com" };
+
+  it("fails Lifecycle startup honestly on a newer Pi schema and retries on the next call", async () => {
+    await withTestSession("startup-recovery", async (session, state) => {
+      // The recoverable fault, written through native storage before startup: a durable schema
+      // version newer than the shipped Pi migrations, in the `pi_` table PiHarness opens.
+      state.storage.sql.exec(
+        "CREATE TABLE pi_durable_schema (" +
+          "singleton INTEGER PRIMARY KEY CHECK (singleton = 1), " +
+          "version INTEGER NOT NULL CHECK (version >= 0)) STRICT",
+      );
+      state.storage.sql.exec("INSERT INTO pi_durable_schema VALUES (1, 99)");
+
+      // Identity is verified and persisted, then Lifecycle startup opens Pi's store, the
+      // migration check fails the open, and the original cause surfaces to the caller.
+      await expect(session.snapshot(identity)).rejects.toThrowError(/newer than supported/);
+      // A failed startup is not cached: the next call retries and fails the same honest way.
+      await expect(session.snapshot(identity)).rejects.toThrowError(/newer than supported/);
+
+      // Remove the fault through native storage; nothing else changed.
+      state.storage.sql.exec("UPDATE pi_durable_schema SET version = 0");
+
+      // The next call's startup succeeds: migrations apply, the root exists with the workspace
+      // cwd, and the snapshot is served without any container.
+      const snapshot = JSON.parse(await session.snapshot(identity)) as {
+        sessionId: string;
+        conversation: { entries: unknown[] };
+      };
+      expect(snapshot.sessionId).toBe(state.id.toString());
+      expect(snapshot.conversation.entries).toEqual([]);
+      const owner = [
+        ...state.storage.sql.exec<{ id: string; email: string }>(
+          "SELECT id, email FROM app_owner WHERE singleton = 1",
+        ),
+      ][0];
+      expect(owner).toEqual({ id: "owner-1", email: "owner@example.com" });
+    });
+  });
+
+  it("reports coexisting legacy and pi_ layouts on every call and starts once repaired", async () => {
+    await withTestSession("both-layouts", async (session, state) => {
+      // Both layouts, as a rollback that skipped `restoreLegacyPiTables` would leave them.
+      for (const table of ["durable_schema", "pi_durable_schema"]) {
+        state.storage.sql.exec(`CREATE TABLE ${table} (singleton INTEGER PRIMARY KEY)`);
       }
-      const identity: SessionIdentity = { id: "owner-1", email: "owner@example.com" };
-      try {
-        // The recoverable fault, written through NATIVE storage before any initializer runs: a
-        // durable schema version the shipped migrations cannot be newer-checked against.
-        state.storage.sql.exec(
-          "CREATE TABLE durable_schema (" +
-            "singleton INTEGER PRIMARY KEY CHECK (singleton = 1), " +
-            "version INTEGER NOT NULL CHECK (version >= 0)) STRICT",
-        );
-        state.storage.sql.exec("INSERT INTO durable_schema VALUES (1, 99)");
+      // Every call reaches the object and surfaces the refusal; nothing is half-moved.
+      await expect(session.snapshot(identity)).rejects.toThrowError(/both/);
+      await expect(session.snapshot(identity)).rejects.toThrowError(/both/);
 
-        // First snapshot: identity is verified and persisted, then the initializer reaches its
-        // storage stage, the conflicting migration fails the open, and the original cause — not
-        // a wrapper or close artifact — surfaces to the caller.
-        await expect(session.snapshot(identity)).rejects.toThrowError(/newer than supported/);
-
-        // Remove the fault through native storage; nothing else changed.
-        state.storage.sql.exec("UPDATE durable_schema SET version = 0");
-
-        // Second snapshot: the storage stage passes (migrations apply, the harness opens), and
-        // the initializer honestly fails at the unavailable container image boundary — proof the
-        // gate was re-adopted rather than left closed.
-        await expect(session.snapshot(identity)).rejects.toThrowError(
-          /Container image 'workspace' is not configured/,
-        );
-
-        // Still not closed: a third attempt fails the same honest way, and the verified owner is
-        // persisted in the app tables through every retry.
-        await expect(session.snapshot(identity)).rejects.toThrowError(
-          /Container image 'workspace' is not configured/,
-        );
-        const owner = [
-          ...state.storage.sql.exec<{ id: string; email: string }>(
-            "SELECT id, email FROM app_owner WHERE singleton = 1",
-          ),
-        ][0];
-        expect(owner).toEqual({ id: "owner-1", email: "owner@example.com" });
-      } finally {
-        restoreNativeState?.();
-      }
+      // Repairable in place: once the stray copies are removed, the next call starts normally.
+      state.storage.sql.exec("DROP TABLE durable_schema");
+      state.storage.sql.exec("DROP TABLE pi_durable_schema");
+      expect(JSON.parse(await session.snapshot(identity))).toMatchObject({
+        conversation: { entries: [] },
+      });
     });
   });
 });

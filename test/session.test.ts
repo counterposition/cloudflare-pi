@@ -1,10 +1,11 @@
 /**
  * Consumer regressions over the real Pi Harness public API — no mocks, no billed calls.
  *
- * Pi 1.0.1 strands an accepted queued follow-up when its run fails: `endRun` settles the run's
- * inputs and runs no final boundary, `Harness.resume()` only enables task scheduling, and a
- * requestId retry dedups to the existing receipt without placing the inbox. The session backend
- * (src/session.ts) therefore inspects and recovers such inputs inside its admission boundary,
+ * Pi Durable 1.0.1 and 1.0.2 strand an accepted queued follow-up when its run fails: `endRun`
+ * settles the run's inputs and runs no final boundary, `Harness.resume()` only enables task
+ * scheduling, and a requestId retry dedups to the existing receipt without placing the inbox.
+ * The session backend (src/session.ts) therefore recovers such inputs in a host `Lifecycle` job
+ * that runs concurrently with admissions (the run check happens inside the recovery commit),
  * using the shared portable helper (src/recovery.ts) over the same public Tx/inbox mechanics
  * the built-in final boundary uses. These tests pin the
  * exact behavior that recovery depends on — the stranding itself, requestId dedup, persistence

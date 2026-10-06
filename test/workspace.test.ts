@@ -170,12 +170,13 @@ vi.mock("@cloudflare/sandbox", () => {
 
 const WORKSPACE_TABLE = "app_workspace_checkpoints";
 
-async function makeManager(): Promise<{
+async function makeManager({ warm = true }: { warm?: boolean } = {}): Promise<{
   manager: WorkspaceManager;
   database: SqliteDatabase;
   execCalls: string[][];
   /** Every status snapshot handed to onChange, in publish order. */
   changes: WorkspaceStatus[];
+  destroyCalls: () => number;
   cleanup: () => Promise<void>;
 }> {
   const dir = await mkdtemp(join(tmpdir(), "workspace-checkpoints-"));
@@ -183,6 +184,7 @@ async function makeManager(): Promise<{
   // A container that stays up: monitor() resolves only when it exits.
   const monitorHeld = Promise.withResolvers<void>();
   const execCalls: string[][] = [];
+  let destroyCalls = 0;
   const changes: WorkspaceStatus[] = [];
   const recordChange = (): void => {
     // WorkspaceManager requires an onChange callback (DI boundary); recording
@@ -196,6 +198,7 @@ async function makeManager(): Promise<{
       this.running = true;
     },
     async destroy(): Promise<void> {
+      destroyCalls++;
       this.running = false;
     },
     async setInactivityTimeout(): Promise<void> {},
@@ -219,12 +222,13 @@ async function makeManager(): Promise<{
     database,
     { sessionId: "session-1", onChange: recordChange },
   );
-  await manager.initialize();
+  if (warm) await manager.ensureReady();
   return {
     manager,
     database,
     execCalls,
     changes,
+    destroyCalls: () => destroyCalls,
     cleanup: async () => {
       await database.close().catch(() => undefined);
       await rm(dir, { recursive: true, force: true });
@@ -240,6 +244,22 @@ async function pointerRows(
     `SELECT id, created_at FROM ${WORKSPACE_TABLE} ORDER BY created_at DESC, rowid DESC`,
   );
 }
+
+test("a warm-up after a resumed tool started the container keeps that container and adapter", async () => {
+  // Restart order: Pi resumes a tool (holding the adapter it built) before startup's warm-up.
+  const { manager, execCalls, destroyCalls, cleanup } = await makeManager({ warm: false });
+  try {
+    const captured = manager.environment();
+    await manager.runTool(false, async () => undefined);
+    await manager.ensureReady();
+    expect(destroyCalls()).toBe(0);
+    expect(execCalls.filter((argv) => argv[0] === "mkdir")).toHaveLength(1);
+    // The adapter the tool captured before the container started is the one quiesce cleans.
+    expect(manager.environment()).toBe(captured);
+  } finally {
+    await cleanup();
+  }
+});
 
 test("checkpoint publishes the durable claim before cleanup and survives garbage-collection IO failure", async () => {
   const { manager, database, changes, cleanup } = await makeManager();

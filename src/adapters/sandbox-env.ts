@@ -585,6 +585,22 @@ export class SandboxExecutionEnv implements ExecutionEnv {
 
   /** Best-effort: signals every launcher and unclosed reader this environment still tracks; each trap kills its process group. */
   async cleanup(_context: Context): Promise<void> {
+    this.releaseTracked();
+  }
+
+  /**
+   * Container-incarnation reset: signals and forgets every launcher and reader tracked against
+   * the previous container and drops the cached home directory and startup environment. The
+   * adapter outlives its container (a tool may hold it across a reset), but nothing learned
+   * from a destroyed VM is reused.
+   */
+  resetIncarnation(): void {
+    this.releaseTracked();
+    this.homeDirPromise = undefined;
+    this.containerEnvPromise = undefined;
+  }
+
+  private releaseTracked(): void {
     for (const root of this.activeRoots) root.kill(SIGTERM);
     this.activeRoots.clear();
     for (const reader of this.activeReaders) reader.kill();

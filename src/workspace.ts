@@ -19,7 +19,7 @@
 // that escaped background writers stopped.
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import { DirectoryBackup, type DirectoryBackupRecord } from "@cloudflare/sandbox";
-import type { SqliteDatabase, SqliteExecutor } from "@earendil-works/pi-durable/storage/sqlite";
+import type { SqliteDatabase } from "@earendil-works/pi-durable/storage/sqlite";
 import { SandboxExecutionEnv } from "./adapters/sandbox-env";
 import type { WorkspaceCheckpoint, WorkspaceStatus } from "./contracts";
 
@@ -130,10 +130,11 @@ function parseStoredRow(row: CheckpointRow): StoredCheckpoint {
 }
 
 /**
- * App-prefixed SQL persistence for checkpoint pointers over the session's
- * shared `SqliteDatabase` (the same serialized queue the Pi storage uses).
- * Rows hold the full `DirectoryBackupRecord` plus `createdAt`, scoped to the
- * owning session id; only own-session rows are ever read, kept, or deleted.
+ * App-prefixed SQL persistence for checkpoint pointers over the application
+ * tables' `SqliteDatabase` gate. Every write is a single statement, so no app
+ * transaction is ever open beside one of Pi's. Rows hold the full
+ * `DirectoryBackupRecord` plus `createdAt`, scoped to the owning session id;
+ * only own-session rows are ever read, kept, or deleted.
  */
 class CheckpointStore {
   private readonly sessionId: string;
@@ -203,20 +204,27 @@ class CheckpointStore {
     );
   }
 
-  /** Removes the given own-session pointer rows atomically. */
+  /**
+   * Removes the given own-session pointer rows in one statement (atomic
+   * without a transaction). Retention keeps the list to the few rows a
+   * checkpoint made obsolete; batches stay below Durable Object SQL's
+   * bound-parameter limit, and a failed batch is retried by the next
+   * checkpoint's garbage collection.
+   */
   async removeRecords(stored: readonly StoredCheckpoint[]): Promise<void> {
-    if (stored.length === 0) return;
-    await this.database.transaction(async (transaction: SqliteExecutor) => {
-      for (const entry of stored) {
-        await transaction.run(
-          `DELETE FROM ${CHECKPOINT_TABLE} WHERE session_id = ? AND id = ?`,
-          this.sessionId,
-          entry.record.id,
-        );
-      }
-    });
+    for (let start = 0; start < stored.length; start += REMOVE_BATCH) {
+      const ids = stored.slice(start, start + REMOVE_BATCH).map((entry) => entry.record.id);
+      await this.database.run(
+        `DELETE FROM ${CHECKPOINT_TABLE} WHERE session_id = ? AND id IN (${ids.map(() => "?").join(", ")})`,
+        this.sessionId,
+        ...ids,
+      );
+    }
   }
 }
+
+/** Ids per pointer DELETE; Durable Object SQL allows at most 100 bound parameters. */
+const REMOVE_BATCH = 90;
 
 /** Serial operation boundary for start/tool/quiesce/archive/restore. */
 class WorkspaceQueue {
@@ -240,23 +248,45 @@ export class WorkspaceManager {
   private readonly backup: DirectoryBackup;
   private readonly store: CheckpointStore;
   private readonly queue = new WorkspaceQueue();
-  private currentEnv: SandboxExecutionEnv | undefined;
+  /** One adapter for this manager's life; reset in place per container incarnation. */
+  private readonly env: SandboxExecutionEnv;
   private cachedStatus: WorkspaceStatus = { state: "stopped" };
   private lastCheckpoint: WorkspaceCheckpoint | undefined;
   private containerReady = false;
-  private initializePromise: Promise<void> | undefined;
+  private schemaReady: Promise<void> | undefined;
 
   constructor(
     private readonly container: Container,
     gateway: ConstructorParameters<typeof DirectoryBackup>[1],
     database: SqliteDatabase,
-    private readonly options: { sessionId: string; onChange: () => void },
+    private readonly options: {
+      sessionId: string;
+      onChange: () => void;
+      /** A container start restored `checkpoint` into the workspace. */
+      onRestored?: (checkpoint: WorkspaceCheckpoint) => void;
+    },
   ) {
     this.backup = new DirectoryBackup(container, gateway, {
       binding: "WORKSPACE_BACKUPS",
       prefix: `sessions/${options.sessionId}/`,
     });
     this.store = new CheckpointStore(database, options.sessionId);
+    this.env = new SandboxExecutionEnv(container, {
+      id: options.sessionId,
+      cwd: WORKSPACE_DIR,
+    });
+    // Created up front: checkpoint and restore requests can arrive before any
+    // container work, and every store read depends on the table.
+    this.schemaReady = this.createSchema();
+  }
+
+  /** Memoized schema creation; a failure is observed here and retried by the next operation. */
+  private createSchema(): Promise<void> {
+    const attempt = this.store.ensureSchema();
+    attempt.catch(() => {
+      if (this.schemaReady === attempt) this.schemaReady = undefined;
+    });
+    return attempt;
   }
 
   /** Synchronous cached status; `onChange` fires after every transition. */
@@ -265,37 +295,31 @@ export class WorkspaceManager {
   }
 
   /**
-   * Per-incarnation startup: stop any container left over from a previous Durable
-   * Object incarnation (its orphaned Linux commands must never keep writing
-   * against a recovered transcript), start a fresh container, and restore the
-   * last published checkpoint into ordinary files. A missing or corrupt latest
-   * backup fails initialization — the workspace is never silently emptied.
+   * Per-incarnation warm-up: start the container (stopping one left over from a
+   * previous Durable Object incarnation, whose orphaned Linux commands must
+   * never keep writing against a recovered transcript) and restore the last
+   * published checkpoint into ordinary files. A missing or corrupt latest
+   * backup fails honestly — the workspace is never silently emptied.
+   *
+   * Lazy and idempotent: it runs in the operation queue and does nothing when
+   * this incarnation already started the container, so it never destroys one a
+   * resumed tool started first. Every tool, checkpoint, and restore performs
+   * the same `ensureContainerLocked` step, so callers may skip this entirely;
+   * it only surfaces the restore status before the first tool needs it.
    */
-  initialize(): Promise<void> {
-    this.initializePromise ??= this.queue
-      .run(async () => {
-        await this.store.ensureSchema();
-        await this.startContainerLocked();
-      })
-      .catch((error: unknown) => {
-        this.initializePromise = undefined; // allow an honest retry
-        throw error;
-      });
-    return this.initializePromise;
+  ensureReady(): Promise<void> {
+    return this.queue.run(() => this.ensureContainerLocked());
   }
 
   /**
-   * The execution environment for tool callbacks: a fresh adapter per container
-   * incarnation (cached tmpdir/home lookups from a destroyed VM are never
-   * reused) with a stable file namespace (the session id) and cwd
-   * /workspace/project.
+   * The execution environment for tool callbacks: one adapter with a stable
+   * file namespace (the session id) and cwd /workspace/project. Its identity is
+   * stable, so an adapter Pi captured before a lazy container reset is still
+   * the one that reset re-arms and that quiesce cleans; its per-container
+   * caches (tmpdir/home lookups) are dropped on every container incarnation.
    */
   environment(): SandboxExecutionEnv {
-    this.currentEnv ??= new SandboxExecutionEnv(this.container, {
-      id: this.options.sessionId,
-      cwd: WORKSPACE_DIR,
-    });
-    return this.currentEnv;
+    return this.env;
   }
 
   /**
@@ -368,6 +392,7 @@ export class WorkspaceManager {
   // --- serialized internals (never re-enter the queue) ---
 
   private async ensureContainerLocked(): Promise<void> {
+    await (this.schemaReady ??= this.createSchema());
     if (this.containerReady && this.container.running) return;
     await this.startContainerLocked();
   }
@@ -383,7 +408,7 @@ export class WorkspaceManager {
       );
     }
     this.containerReady = false;
-    this.currentEnv = undefined;
+    this.env.resetIncarnation();
     this.publish("starting");
     try {
       const image = this.container.images.workspace;
@@ -402,7 +427,9 @@ export class WorkspaceManager {
       } else {
         this.publish("restoring");
         await this.backup.restore(latest.record);
-        this.lastCheckpoint = { key: latest.record.id, createdAt: latest.createdAt };
+        const restored = { key: latest.record.id, createdAt: latest.createdAt };
+        this.lastCheckpoint = restored;
+        this.options.onRestored?.(restored);
       }
       this.containerReady = true;
       this.publish("ready");
@@ -473,9 +500,7 @@ export class WorkspaceManager {
    * Failure is fatal to the enclosing checkpoint/restore.
    */
   private async quiesceLocked(): Promise<void> {
-    if (this.currentEnv !== undefined) {
-      await this.currentEnv.cleanup(BACKGROUND_CONTEXT);
-    }
+    await this.env.cleanup(BACKGROUND_CONTEXT);
     const output = await this.runInContainer(
       [WORKSPACE_HELPER_PATH, "quiesce"],
       "workspace quiesce",

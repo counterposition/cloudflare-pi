@@ -16,13 +16,26 @@ export default defineConfig({
           include: ["test/durable-sqlite.test.ts", "test/sandbox-control.test.ts"],
         },
       },
+      // PiHarness hosting over Lifecycle on real workerd (test/piharness.wrangler.jsonc +
+      // test/piharness.fixture.ts): table migration, alarms, and queued-input recovery.
+      {
+        plugins: [cloudflareTest({ wrangler: { configPath: "./test/piharness.wrangler.jsonc" } })],
+        test: {
+          name: "piharness",
+          include: ["test/piharness.test.ts"],
+        },
+      },
       // Node runtime for tests that do not need workerd: sandbox-env
       // fs-helper tests (real node:child_process) and auth tests live here.
       {
         test: {
           name: "node",
           include: ["test/**/*.test.ts"],
-          exclude: ["test/durable-sqlite.test.ts", "test/sandbox-control.test.ts"],
+          exclude: [
+            "test/durable-sqlite.test.ts",
+            "test/sandbox-control.test.ts",
+            "test/piharness.test.ts",
+          ],
         },
       },
     ],

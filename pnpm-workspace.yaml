@@ -1,9 +1,5 @@
 minimumReleaseAgeExclude:
   - "@cloudflare/workers-types@5.20261003.1"
-  - "@earendil-works/chord@1.0.1"
-  - "@earendil-works/pi-ai@1.0.1"
-  - "@earendil-works/pi-durable@1.0.1"
-  - "@earendil-works/pi-telemetry@1.0.1"
   - "workerd@1.20261001.1"
 # The current workerd binary (1.20261001.1, supports compat dates through
 # 2026-10-08). @cloudflare/vitest-pool-workers@0.22.0 pins an older miniflare
@@ -16,8 +12,11 @@ overrides:
 # esbuild/workerd: native binaries need their postinstall to run.
 # @google/genai (transitive of pi-ai, inference is Workers AI only) and
 # protobufjs (docs-only postinstall, no runtime effect here): denied.
+# core-js-pure (transitive of agents via mimetext; email features are unused,
+# and its postinstall only prints a banner): denied.
 allowBuilds:
   esbuild: true
   workerd: true
   "@google/genai": false
   protobufjs: false
+  "core-js-pure": false

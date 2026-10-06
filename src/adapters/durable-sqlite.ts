@@ -8,7 +8,6 @@
  * This module is Workers-only. It must not import Node built-ins; `DurableObjectStorage`,
  * `SqlStorage`, and `SqlStorageValue` are ambient types from `@cloudflare/workers-types`.
  */
-import { SqliteStorage } from "@earendil-works/pi-durable/storage/sqlite";
 import type {
   SqliteDatabase,
   SqliteExecutor,
@@ -242,9 +241,4 @@ export class DurableSqliteDatabase extends DurableSqliteExecutor implements Sqli
       return operation();
     });
   }
-}
-
-/** Open Pi's portable SQLite storage over a Durable Object's SQLite-backed storage. */
-export async function openDurableStorage(storage: DurableObjectStorage): Promise<SqliteStorage> {
-  return SqliteStorage.open(new DurableSqliteDatabase(storage));
 }

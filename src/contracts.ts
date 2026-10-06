@@ -51,8 +51,13 @@ export interface SubmitInput {
   whenBusy: "steer" | "followUp";
 }
 
+/**
+ * Durable admission receipt. `operationId` is the request's `requestId`; `accepted` is false when
+ * that requestId was already admitted (a retry), in which case nothing new was queued.
+ */
 export interface SubmitReceipt {
-  submissionId: number;
+  operationId: string;
+  accepted: boolean;
 }
 
 export interface ApiError {
